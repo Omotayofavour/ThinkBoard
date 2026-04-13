@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, Trash2, Edit2, Copy, Calendar, Tag, Loader2, Check, X, Maximize2 } from "lucide-react"
+import { Sparkles, Trash2, Edit2, Copy, Calendar, Tag, Loader2, Check, X, Maximize2, ArrowLeftRight } from "lucide-react"
 import { format } from "date-fns"
 import { Idea } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,33 +26,38 @@ interface IdeaCardProps {
 export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
   const [isExpanding, setIsExpanding] = React.useState(false)
   
+  // What are we viewing in the card body?
+  const [viewing, setViewing] = React.useState<'original' | 'ai'>('original')
+  
   // Card Edit State
   const [isEditing, setIsEditing] = React.useState(false)
   const [editTitle, setEditTitle] = React.useState(idea.title)
-  const [editDescription, setEditDescription] = React.useState(idea.description)
+  // We need to edit the currently viewed content
+  const [editContent, setEditContent] = React.useState("")
   
   // Modal State
   const [showModal, setShowModal] = React.useState(false)
   const [isEditingModal, setIsEditingModal] = React.useState(false)
-  const [editExpanded, setEditExpanded] = React.useState(idea.expandedContent || "")
+  const [editExpanded, setEditExpanded] = React.useState("")
   
   const [errorMsg, setErrorMsg] = React.useState("")
   const [copied, setCopied] = React.useState(false)
   const [copiedModal, setCopiedModal] = React.useState(false)
 
-  // Sync state if idea changes via other components
+  // Sync state if idea changes
   React.useEffect(() => {
     setEditTitle(idea.title)
-    setEditDescription(idea.description)
-    if (idea.expandedContent) setEditExpanded(idea.expandedContent)
-  }, [idea])
+  }, [idea.title])
+
+  React.useEffect(() => {
+    if (viewing === 'ai' && idea.expandedContent) {
+       setEditContent(idea.expandedContent)
+    } else {
+       setEditContent(idea.description)
+    }
+  }, [viewing, idea])
 
   const handleExpand = async () => {
-    if (idea.expandedContent) {
-      setShowModal(true)
-      return
-    }
-
     setIsExpanding(true)
     setErrorMsg("")
     try {
@@ -64,7 +69,7 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
          throw new Error("No response from AI")
       }
       onUpdate({ ...idea, expandedContent: result.expandedIdea })
-      setShowModal(true)
+      setViewing('ai')
     } catch (error) {
       console.error("AI expansion failed", error)
       setErrorMsg("Failed to expand! Check if GEMINI_API_KEY is correctly added to .env")
@@ -74,12 +79,20 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
   }
 
   const handleSaveCardEdit = () => {
-    onUpdate({ ...idea, title: editTitle, description: editDescription })
+    if (viewing === 'original') {
+      onUpdate({ ...idea, title: editTitle, description: editContent })
+    } else {
+      onUpdate({ ...idea, title: editTitle, expandedContent: editContent })
+    }
     setIsEditing(false)
   }
 
   const handleSaveModalEdit = () => {
-    onUpdate({ ...idea, expandedContent: editExpanded })
+    if (viewing === 'original') {
+      onUpdate({ ...idea, description: editExpanded })
+    } else {
+      onUpdate({ ...idea, expandedContent: editExpanded })
+    }
     setIsEditingModal(false)
   }
   
@@ -94,59 +107,54 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
     }
   }
 
+  const openModal = () => {
+    setEditExpanded(viewing === 'original' ? idea.description : (idea.expandedContent || ""))
+    setIsEditingModal(false)
+    setShowModal(true)
+  }
+
+  // Determine what text to show in the card
+  const activeContent = viewing === 'original' ? idea.description : idea.expandedContent
+
   return (
     <>
-      <Card className="idea-card-hover group flex flex-col h-full overflow-hidden border-border/50 relative">
-        <CardHeader className="pb-3">
+      <Card className="idea-card-hover group flex flex-col h-[360px] overflow-hidden border-border/50 relative bg-card">
+        <CardHeader className="pb-3 shrink-0">
           <div className="flex justify-between items-start gap-4">
-            <div className="flex-1">
+            <div className="flex-1 w-full">
                {isEditing ? (
                  <Input 
                    value={editTitle} 
                    onChange={(e) => setEditTitle(e.target.value)} 
-                   className="mb-2 font-headline text-lg"
+                   className="mb-2 font-headline text-lg w-full"
                    placeholder="Idea title"
                  />
                ) : (
-                 <CardTitle className="text-xl font-headline text-primary line-clamp-2 pr-[70px]">
+                 <CardTitle className="text-xl font-headline text-primary line-clamp-2">
                    {idea.title} 
+                   {idea.expandedContent && viewing === 'ai' && <span className="text-xs ml-2 bg-primary/20 text-primary px-2 py-1 rounded-full align-middle whitespace-nowrap">✨ AI View</span>}
                  </CardTitle>
                )}
             </div>
-            
-            {!isEditing && (
-              <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-md border shadow-sm">
-                <Button title="Copy Idea" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleCopy(idea.description)}>
-                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                </Button>
-                <Button title="Edit Idea" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setIsEditing(true)}>
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button title="Delete Idea" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(idea.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
           {!isEditing && (
             <CardDescription className="flex items-center gap-2 text-xs mt-1">
               <Calendar className="h-3 w-3" />
               {format(idea.createdAt, "MMM d, yyyy")}
-              {idea.expandedContent && <span className="ml-2 bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">✨ Expanded</span>}
             </CardDescription>
           )}
         </CardHeader>
         
-        <CardContent className="flex-1 space-y-4">
+        <CardContent className="flex-1 overflow-y-auto px-6 py-0 custom-scrollbar mb-2 relative">
           {isEditing ? (
-            <div className="flex flex-col gap-2 h-full">
+            <div className="flex flex-col gap-2 h-full pb-2">
               <textarea 
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Edit the original description..."
-                className="flex-1 w-full min-h-[150px] p-3 text-sm rounded-md border border-input bg-background/50 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Edit content..."
+                className="flex-1 w-full p-3 text-sm rounded-md border border-input bg-background shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[140px]"
               />
-              <div className="flex gap-2 justify-end mt-2">
+              <div className="flex gap-2 justify-end mt-1">
                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
                    <X className="h-4 w-4 mr-1"/> Cancel
                  </Button>
@@ -156,41 +164,57 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
               </div>
             </div>
           ) : (
-            <>
-              <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap line-clamp-[8]">
-                {idea.description}
-              </p>
-              
-              {idea.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-2 mt-auto">
-                  {idea.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-[10px] py-0 px-2 font-normal">
-                      <Tag className="h-2.5 w-2.5 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </>
+            <p className="text-[15px] text-foreground/90 leading-relaxed whitespace-pre-wrap pb-2">
+              {activeContent}
+            </p>
           )}
 
           {errorMsg && (
-            <div className="text-xs text-destructive font-medium bg-destructive/10 p-3 rounded-md border border-destructive/20 flex items-center gap-2">
+            <div className="text-xs text-destructive font-medium bg-destructive/10 p-2 mt-2 rounded-md border border-destructive/20 flex items-center gap-2">
               <span>⚠️ {errorMsg}</span>
             </div>
           )}
         </CardContent>
+
+        {!isEditing && (
+          <div className="shrink-0 px-6 pb-2 pt-1 flex items-center justify-between border-t border-border/20 bg-muted/20 gap-2">
+             <div className="flex items-center space-x-1 -ml-2">
+                <Button title="Copy Text" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" onClick={() => handleCopy(activeContent || "")}>
+                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button title="Edit Content" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" onClick={() => setIsEditing(true)}>
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button title="Delete Idea" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={() => onDelete(idea.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+             </div>
+             
+             {idea.expandedContent && (
+               <Button 
+                 title="Toggle Format" 
+                 variant="ghost" 
+                 size="sm" 
+                 className="text-xs gap-1.5 h-8 font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 shrink-0" 
+                 onClick={() => setViewing(viewing === 'ai' ? 'original' : 'ai')}
+               >
+                 <ArrowLeftRight className="h-3 w-3" />
+                 {viewing === 'ai' ? 'Switch to Original' : 'Switch to AI'}
+               </Button>
+             )}
+          </div>
+        )}
         
         {!isEditing && (
-          <CardFooter className="pt-2 border-t border-border/20 bg-muted/5">
+          <CardFooter className="pt-0 pb-4 mt-2 shrink-0 px-6">
             <Button
-              variant="ghost"
+              variant="default"
               size="sm"
               className={cn(
-                 "w-full gap-2 text-primary font-medium transition-colors hover:text-primary hover:bg-primary/5",
-                 idea.expandedContent ? "bg-primary/5 hover:bg-primary/10" : ""
+                 "w-full gap-2 font-medium transition-all",
+                 idea.expandedContent ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : "bg-primary text-primary-foreground hover:bg-primary/90"
               )}
-              onClick={handleExpand}
+              onClick={idea.expandedContent ? openModal : handleExpand}
               disabled={isExpanding}
             >
               {isExpanding ? (
@@ -199,10 +223,17 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
                   Thinking...
                 </>
               ) : idea.expandedContent ? (
-                <>
-                  <Maximize2 className="h-4 w-4" />
-                  View Expanded AI Idea
-                </>
+                viewing === 'ai' ? (
+                  <>
+                    <Maximize2 className="h-4 w-4" />
+                    Maximize Expanded AI Idea
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="h-4 w-4" />
+                    Maximize Original Idea
+                  </>
+                )
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
@@ -221,17 +252,17 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
         <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col items-start translate-y-[-50%] p-6">
           <DialogHeader className="w-full relative shrink-0 border-b border-border/50 pb-4">
             <DialogTitle className="text-2xl font-headline text-primary flex items-start gap-2 pr-28">
-              <Sparkles className="h-6 w-6 shrink-0 mt-0.5" />
-              <span>{idea.title} <span className="font-light text-muted-foreground ml-1">| AI Insights</span></span>
+               {viewing === 'ai' ? <Sparkles className="h-6 w-6 shrink-0 mt-0.5 text-primary" /> : <Tag className="h-6 w-6 shrink-0 mt-0.5" />}
+              <span>{idea.title} <span className="font-light text-muted-foreground ml-1">| {viewing === 'ai' ? 'AI Insights' : 'Original'}</span></span>
             </DialogTitle>
             
             <div className="absolute right-6 top-0 flex items-center gap-1">
               {!isEditingModal && (
                 <>
-                  <Button title="Copy Insights" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleCopy(idea.expandedContent || "", true)}>
+                  <Button title="Copy Content" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" onClick={() => handleCopy(editExpanded, true)}>
                     {copiedModal ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                   </Button>
-                  <Button title="Edit Insights" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setIsEditingModal(true)}>
+                  <Button title="Edit Content" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" onClick={() => setIsEditingModal(true)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
                 </>
@@ -245,7 +276,7 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
                 <textarea 
                   value={editExpanded}
                   onChange={(e) => setEditExpanded(e.target.value)}
-                  placeholder="Edit the AI Insights..."
+                  placeholder="Edit content..."
                   className="flex-1 w-full p-4 text-base leading-relaxed rounded-md border border-input bg-background/50 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[400px]"
                 />
                 <div className="flex gap-2 justify-end mt-2">
@@ -253,13 +284,13 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
                      <X className="h-4 w-4 mr-1"/> Cancel
                    </Button>
                    <Button size="sm" onClick={handleSaveModalEdit}>
-                     <Check className="h-4 w-4 mr-1"/> Save Insights
+                     <Check className="h-4 w-4 mr-1"/> Save Changes
                    </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-base text-foreground/90 leading-loose whitespace-pre-wrap">
-                {idea.expandedContent}
+              <div className="text-base text-foreground/90 leading-loose whitespace-pre-wrap pb-8">
+                {editExpanded}
               </div>
             )}
           </div>

@@ -25,6 +25,27 @@
     --ring: 191 58% 48%;
     --radius: 0.75rem;
   }
+  .dark {
+    --background: 191 40% 6%;
+    --foreground: 191 20% 90%;
+    --card: 191 40% 10%;
+    --card-foreground: 191 20% 90%;
+    --popover: 191 40% 10%;
+    --popover-foreground: 191 20% 90%;
+    --primary: 191 60% 50%;
+    --primary-foreground: 191 80% 10%;
+    --secondary: 150 40% 25%;
+    --secondary-foreground: 191 80% 90%;
+    --muted: 191 40% 15%;
+    --muted-foreground: 191 20% 60%;
+    --accent: 150 40% 25%;
+    --accent-foreground: 191 80% 90%;
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 191 40% 20%;
+    --input: 191 40% 20%;
+    --ring: 191 60% 50%;
+  }
 }
 
 @layer base {
@@ -44,4 +65,17 @@
 .idea-card-hover:hover {
   transform: translateY(-4px);
   @apply shadow-lg;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
 }

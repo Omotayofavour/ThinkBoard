@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function ThinkBoardPage() {
   const [ideas, setIdeas] = React.useState<Idea[]>([])
@@ -95,7 +96,10 @@ export default function ThinkBoardPage() {
             />
           </div>
 
-          <IdeaForm onSubmit={handleCreateIdea} />
+          <div className="flex items-center gap-3">
+            <IdeaForm onSubmit={handleCreateIdea} />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

@@ -138,9 +138,21 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
             </div>
           </div>
           {!isEditing && (
-            <CardDescription className="flex items-center gap-2 text-xs mt-1">
-              <Calendar className="h-3 w-3" />
-              {format(idea.createdAt, "MMM d, yyyy")}
+            <CardDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-1">
+              {idea.tags && idea.tags.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {idea.tags.map((tag) => (
+                    <span key={tag} className="flex items-center gap-1 font-medium bg-muted/30 px-1.5 py-0.5 rounded-sm">
+                      <Tag className="h-3 w-3" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {format(idea.createdAt, "MMM d, yyyy")}
+              </span>
             </CardDescription>
           )}
         </CardHeader>

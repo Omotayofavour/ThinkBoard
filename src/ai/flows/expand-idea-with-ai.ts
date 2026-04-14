@@ -36,7 +36,7 @@ const expandIdeaPrompt = ai.definePrompt({
   input: {schema: ExpandIdeaInputSchema},
   output: {schema: ExpandIdeaOutputSchema},
   config: { 
-    maxOutputTokens: 100,
+    maxOutputTokens: 300,
     temperature: 0.5 
   },
   prompt: `You are a highly creative but extremely concise AI assistant.

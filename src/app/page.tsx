@@ -82,8 +82,8 @@ export default function ThinkBoardPage() {
     <div className="min-h-screen bg-background font-body text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        <div className="container mx-auto px-4 py-3 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 order-1">
             <div className="bg-primary p-2 rounded-xl shadow-md">
               <BrainCircuit className="h-6 w-6 text-primary-foreground" />
             </div>
@@ -92,21 +92,21 @@ export default function ThinkBoardPage() {
             </h1>
           </div>
 
-          <div className="flex-1 max-w-md relative">
+          <div className="w-full sm:flex-1 max-w-md relative order-3 sm:order-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search thoughts..."
-              className="pl-10 bg-muted/50 border-none h-10 ring-offset-background focus-visible:ring-1 focus-visible:ring-primary"
+              className="pl-10 bg-muted/50 border-none h-10 w-full ring-offset-background focus-visible:ring-1 focus-visible:ring-primary"
               value={filter.search}
               onChange={(e) => setFilter({ ...filter, search: e.target.value })}
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 order-2 sm:order-3">
             <Button
               variant="outline"
               size="icon"
-              className="bg-background/50 h-9 w-9 hidden sm:flex shrink-0"
+              className="bg-background/50 h-9 w-9 flex shrink-0"
               onClick={() => {
                 const newMode = viewMode === "card" ? "list" : "card"
                 setViewMode(newMode)

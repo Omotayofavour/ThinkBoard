@@ -191,7 +191,7 @@ export function IdeaCard({ idea, viewMode = 'card', onDelete, onUpdate }: IdeaCa
                    title={viewing === 'ai' ? 'Switch to Original' : 'Switch to AI'}
                    variant="ghost" 
                    size="icon" 
-                   className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors hidden md:flex" 
+                   className="h-8 w-8 flex text-muted-foreground hover:text-primary transition-colors" 
                    onClick={(e) => { 
                      e.stopPropagation(); 
                      setViewing(viewing === 'ai' ? 'original' : 'ai') 
@@ -204,7 +204,7 @@ export function IdeaCard({ idea, viewMode = 'card', onDelete, onUpdate }: IdeaCa
                  title="Edit Tags & Content" 
                  variant="ghost" 
                  size="icon" 
-                 className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors hidden sm:flex" 
+                 className="h-8 w-8 flex text-muted-foreground hover:text-primary transition-colors" 
                  onClick={(e) => { 
                    e.stopPropagation(); 
                    setIsEditing(true); 

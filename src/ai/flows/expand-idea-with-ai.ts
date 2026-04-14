@@ -35,10 +35,17 @@ const expandIdeaPrompt = ai.definePrompt({
   name: 'expandIdeaPrompt',
   input: {schema: ExpandIdeaInputSchema},
   output: {schema: ExpandIdeaOutputSchema},
-  prompt: `You are a highly creative and insightful AI assistant, specializing in brainstorming and idea development.
-Your task is to take a brief idea and expand upon it, providing detailed suggestions, related concepts, potential avenues for development, and any other creative insights that could stimulate further thought.
+  config: { 
+    maxOutputTokens: 100,
+    temperature: 0.5 
+  },
+  prompt: `You are a highly creative but extremely concise AI assistant.
+Your task is to take a brief idea and provide a lightning-fast expansion. 
 
-Be thorough, imaginative, and practical in your suggestions. Consider different angles, applications, or problems the idea could solve.
+CRITICAL RULES:
+- Be incredibly brief.
+- Provide a maximum of 2 short bullet points.
+- Do NOT exceed 50-70 words total, or your response will be abruptly cut off.
 
 Idea Title: {{{title}}}
 Idea Description: {{{description}}}`,
@@ -51,6 +58,9 @@ const expandIdeaFlow = ai.defineFlow(
     outputSchema: ExpandIdeaOutputSchema,
   },
   async (input) => {
+    // Artificial 2.5-second delay to throttle rapid clicks and reduce backend pressure
+    await new Promise(resolve => setTimeout(resolve, 2500));
+
     const {output} = await expandIdeaPrompt(input);
     return output!;
   }

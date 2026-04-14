@@ -72,7 +72,8 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
       setViewing('ai')
     } catch (error) {
       console.error("AI expansion failed", error)
-      setErrorMsg("Failed to expand! Check if GEMINI_API_KEY is correctly added to .env")
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setErrorMsg(`Failed to expand: ${errorMessage}`)
     } finally {
       setIsExpanding(false)
     }

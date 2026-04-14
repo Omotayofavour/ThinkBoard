@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search, BrainCircuit, Filter, X } from "lucide-react"
+import { Search, BrainCircuit, Filter, X, LayoutGrid, List } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Idea, IdeaFilter } from "@/lib/types"
 import { IdeaCard } from "@/components/idea-card"
 import { IdeaForm } from "@/components/idea-form"
@@ -14,17 +15,22 @@ import { ThemeToggle } from "@/components/theme-toggle"
 export default function ThinkBoardPage() {
   const [ideas, setIdeas] = React.useState<Idea[]>([])
   const [filter, setFilter] = React.useState<IdeaFilter>({ search: "", tags: [] })
+  const [viewMode, setViewMode] = React.useState<'card' | 'list'>('card')
   const [mounted, setMounted] = React.useState(false)
 
   // Hydration and Persistence
   React.useEffect(() => {
     const saved = localStorage.getItem("thinkboard-ideas")
+    const savedView = localStorage.getItem("thinkboard-view")
     if (saved) {
       try {
         setIdeas(JSON.parse(saved))
       } catch (e) {
         console.error("Failed to load ideas", e)
       }
+    }
+    if (savedView === 'list' || savedView === 'card') {
+      setViewMode(savedView)
     }
     setMounted(true)
   }, [])
@@ -96,7 +102,20 @@ export default function ThinkBoardPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-background/50 h-9 w-9 hidden sm:flex shrink-0"
+              onClick={() => {
+                const newMode = viewMode === "card" ? "list" : "card"
+                setViewMode(newMode)
+                localStorage.setItem("thinkboard-view", newMode)
+              }}
+              title={viewMode === "card" ? "Switch to List View" : "Switch to Grid View"}
+            >
+              {viewMode === "card" ? <List className="h-4 w-4 text-muted-foreground" /> : <LayoutGrid className="h-4 w-4 text-muted-foreground" />}
+            </Button>
             <IdeaForm onSubmit={handleCreateIdea} />
             <ThemeToggle />
           </div>
@@ -164,11 +183,15 @@ export default function ThinkBoardPage() {
             </div>
 
             {filteredIdeas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className={cn(
+                "gap-6 transition-all", 
+                viewMode === 'card' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3" : "flex flex-col max-w-4xl"
+              )}>
                 {filteredIdeas.map((idea) => (
                   <IdeaCard
                     key={idea.id}
                     idea={idea}
+                    viewMode={viewMode}
                     onDelete={handleDeleteIdea}
                     onUpdate={handleUpdateIdea}
                   />

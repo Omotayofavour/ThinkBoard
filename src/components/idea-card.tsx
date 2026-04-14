@@ -19,13 +19,16 @@ import { cn } from "@/lib/utils"
 import { Editor } from "@/components/ui/editor"
 import { Download } from "lucide-react"
 
+import { TagInput } from "@/components/tag-input"
+
 interface IdeaCardProps {
   idea: Idea
+  viewMode?: 'card' | 'list'
   onDelete: (id: string) => void
   onUpdate: (idea: Idea) => void
 }
 
-export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
+export function IdeaCard({ idea, viewMode = 'card', onDelete, onUpdate }: IdeaCardProps) {
   const [isExpanding, setIsExpanding] = React.useState(false)
   
   // What are we viewing in the card body?
@@ -34,8 +37,8 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
   // Card Edit State
   const [isEditing, setIsEditing] = React.useState(false)
   const [editTitle, setEditTitle] = React.useState(idea.title)
-  // We need to edit the currently viewed content
   const [editContent, setEditContent] = React.useState("")
+  const [editTags, setEditTags] = React.useState<string[]>(idea.tags || [])
   
   // Modal State
   const [showModal, setShowModal] = React.useState(false)
@@ -49,7 +52,8 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
   // Sync state if idea changes
   React.useEffect(() => {
     setEditTitle(idea.title)
-  }, [idea.title])
+    setEditTags(idea.tags || [])
+  }, [idea.title, idea.tags])
 
   React.useEffect(() => {
     if (viewing === 'ai' && idea.expandedContent) {
@@ -83,9 +87,9 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
 
   const handleSaveCardEdit = () => {
     if (viewing === 'original') {
-      onUpdate({ ...idea, title: editTitle, description: editContent })
+      onUpdate({ ...idea, title: editTitle, description: editContent, tags: editTags })
     } else {
-      onUpdate({ ...idea, title: editTitle, expandedContent: editContent })
+      onUpdate({ ...idea, title: editTitle, expandedContent: editContent, tags: editTags })
     }
     setIsEditing(false)
   }
@@ -147,25 +151,72 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
 
   return (
     <>
-      <Card id={`idea-card-${idea.id}`} className="idea-card-hover group flex flex-col h-[360px] overflow-hidden border-border/50 relative bg-card">
-        <CardHeader className="pb-3 shrink-0">
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex-1 w-full">
-               {isEditing ? (
-                 <Input 
-                   value={editTitle} 
-                   onChange={(e) => setEditTitle(e.target.value)} 
-                   className="mb-2 font-headline text-lg w-full"
-                   placeholder="Idea title"
-                 />
-               ) : (
-                 <CardTitle className="text-xl font-headline text-primary line-clamp-2">
-                   {idea.title} 
-                   {idea.expandedContent && viewing === 'ai' && <span className="text-xs ml-2 bg-primary/20 text-primary px-2 py-1 rounded-full align-middle whitespace-nowrap">✨ AI View</span>}
-                 </CardTitle>
-               )}
-            </div>
+      {viewMode === 'list' && !isEditing ? (
+        <Card 
+          id={`idea-card-${idea.id}`} 
+          className="idea-card-hover group flex flex-row items-center h-[72px] overflow-hidden border-border/50 bg-card cursor-pointer hover:border-primary/50 transition-colors shrink-0" 
+          onClick={openModal}
+        >
+          <div className="flex items-center space-x-4 pl-6 pr-4 w-full">
+             <div className="flex-1 w-full flex flex-col gap-0.5 max-w-[60%]">
+               <CardTitle className="text-base font-headline text-primary line-clamp-1 truncate">
+                 {idea.title} 
+                 {idea.expandedContent && viewing === 'ai' && <span className="text-[10px] ml-2 bg-primary/20 text-primary px-1.5 py-0.5 rounded-full align-middle whitespace-nowrap hidden sm:inline">✨ AI View</span>}
+               </CardTitle>
+               <CardDescription className="text-xs truncate max-w-full hidden md:block">
+                 {activeContent?.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+               </CardDescription>
+             </div>
+             
+             <div className="flex items-center gap-x-4 text-xs text-muted-foreground ml-auto shrink-0 pr-2">
+                {idea.tags && idea.tags.length > 0 && (
+                  <div className="hidden lg:flex items-center gap-1">
+                    {idea.tags.slice(0, 2).map((tag) => (
+                      <span key={tag} className="font-medium bg-muted/50 px-2 py-0.5 rounded-sm truncate max-w-[100px]">
+                        #{tag}
+                      </span>
+                    ))}
+                    {idea.tags.length > 2 && <span className="opacity-50">+{idea.tags.length - 2}</span>}
+                  </div>
+                )}
+                <span className="flex items-center gap-1 shrink-0">
+                  <Calendar className="h-3 w-3" />
+                  {format(idea.createdAt, "MMM d")}
+                </span>
+             </div>
+             
+             <div className="opacity-20 group-hover:opacity-100 transition-opacity">
+               <Maximize2 className="h-4 w-4 text-primary" />
+             </div>
           </div>
+        </Card>
+      ) : (
+        <Card id={`idea-card-${idea.id}`} className="idea-card-hover group flex flex-col h-[360px] overflow-hidden border-border/50 relative bg-card">
+          <CardHeader className="pb-3 shrink-0">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 w-full">
+                 {isEditing ? (
+                   <div className="flex flex-col gap-2 w-full pr-2">
+                     <Input 
+                       value={editTitle} 
+                       onChange={(e) => setEditTitle(e.target.value)} 
+                       className="font-headline text-lg w-full"
+                       placeholder="Idea title"
+                     />
+                     <TagInput 
+                       tags={editTags} 
+                       onChange={setEditTags} 
+                       placeholder="Edit tags..." 
+                     />
+                   </div>
+                 ) : (
+                   <CardTitle className="text-xl font-headline text-primary line-clamp-2">
+                     {idea.title} 
+                     {idea.expandedContent && viewing === 'ai' && <span className="text-xs ml-2 bg-primary/20 text-primary px-2 py-1 rounded-full align-middle whitespace-nowrap">✨ AI View</span>}
+                   </CardTitle>
+                 )}
+              </div>
+            </div>
           {!isEditing && (
             <CardDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-1">
               {idea.tags && idea.tags.length > 0 && (
@@ -287,6 +338,7 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
           </CardFooter>
         )}
       </Card>
+      )}
 
       <Dialog open={showModal} onOpenChange={(val) => {
         if (!val) setIsEditingModal(false); // Reset edit state if modal is closed

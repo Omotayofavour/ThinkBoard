@@ -161,7 +161,7 @@ export function IdeaCard({ idea, viewMode = 'card', onDelete, onUpdate }: IdeaCa
              <div className="flex-1 w-full flex flex-col gap-0.5 max-w-[60%]">
                <CardTitle className="text-base font-headline text-primary line-clamp-1 truncate">
                  {idea.title} 
-                 {idea.expandedContent && viewing === 'ai' && <span className="text-[10px] ml-2 bg-primary/20 text-primary px-1.5 py-0.5 rounded-full align-middle whitespace-nowrap hidden sm:inline">✨ AI View</span>}
+                 {idea.expandedContent && viewing === 'ai' && <span className="text-[10px] ml-2 bg-primary/20 text-primary px-1.5 py-0.5 rounded-full align-middle whitespace-nowrap">✨ AI View</span>}
                </CardTitle>
                <CardDescription className="text-xs truncate max-w-full hidden md:block">
                  {activeContent?.replace(/<[^>]*>?/gm, '').substring(0, 100)}...

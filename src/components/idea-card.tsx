@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { expandIdeaWithAI } from "@/ai/flows/expand-idea-with-ai"
 import { cn } from "@/lib/utils"
+import { Editor } from "@/components/ui/editor"
+import { Download } from "lucide-react"
 
 interface IdeaCardProps {
   idea: Idea
@@ -114,12 +116,38 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
     setShowModal(true)
   }
 
+  const handleExportPDF = async () => {
+    try {
+      // Dynamically import to keep bundle small
+      const { default: html2canvas } = await import('html2canvas');
+      const { jsPDF } = await import('jspdf');
+
+      // Add a slight delay to ensure fonts/icons are loaded
+      const element = document.getElementById(`idea-card-${idea.id}`);
+      if (!element) return;
+
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2] 
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`${idea.title ? idea.title.replace(/\s+/g, '_') : 'ThinkBoard_Idea'}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+    }
+  }
+
   // Determine what text to show in the card
   const activeContent = viewing === 'original' ? idea.description : idea.expandedContent
 
   return (
     <>
-      <Card className="idea-card-hover group flex flex-col h-[360px] overflow-hidden border-border/50 relative bg-card">
+      <Card id={`idea-card-${idea.id}`} className="idea-card-hover group flex flex-col h-[360px] overflow-hidden border-border/50 relative bg-card">
         <CardHeader className="pb-3 shrink-0">
           <div className="flex justify-between items-start gap-4">
             <div className="flex-1 w-full">
@@ -161,11 +189,9 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
         <CardContent className="flex-1 overflow-y-auto px-6 py-0 custom-scrollbar mb-2 relative">
           {isEditing ? (
             <div className="flex flex-col gap-2 h-full pb-2">
-              <textarea 
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                placeholder="Edit content..."
-                className="flex-1 w-full p-3 text-sm rounded-md border border-input bg-background shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[140px]"
+              <Editor 
+                value={editContent} 
+                onChange={setEditContent} 
               />
               <div className="flex gap-2 justify-end mt-1">
                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
@@ -177,9 +203,10 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
               </div>
             </div>
           ) : (
-            <p className="text-[15px] text-foreground/90 leading-relaxed whitespace-pre-wrap pb-2">
-              {activeContent}
-            </p>
+            <div 
+              className="text-[15px] text-foreground/90 leading-relaxed pb-2 prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: activeContent || "" }}
+            />
           )}
 
           {errorMsg && (
@@ -200,6 +227,9 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
                 </Button>
                 <Button title="Delete Idea" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={() => onDelete(idea.id)}>
                   <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button title="Export to PDF" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-blue-500 transition-colors" onClick={handleExportPDF}>
+                  <Download className="h-4 w-4" />
                 </Button>
              </div>
              
@@ -286,11 +316,9 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
           <div className="flex-1 w-full overflow-y-auto py-2 pr-2 mt-4 custom-scrollbar">
             {isEditingModal ? (
               <div className="flex flex-col gap-3 h-full min-h-[400px]">
-                <textarea 
-                  value={editExpanded}
-                  onChange={(e) => setEditExpanded(e.target.value)}
-                  placeholder="Edit content..."
-                  className="flex-1 w-full p-4 text-base leading-relaxed rounded-md border border-input bg-background/50 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[400px]"
+                <Editor 
+                  value={editExpanded} 
+                  onChange={setEditExpanded} 
                 />
                 <div className="flex gap-2 justify-end mt-2">
                    <Button size="sm" variant="outline" onClick={() => setIsEditingModal(false)}>
@@ -302,9 +330,10 @@ export function IdeaCard({ idea, onDelete, onUpdate }: IdeaCardProps) {
                 </div>
               </div>
             ) : (
-              <div className="text-base text-foreground/90 leading-loose whitespace-pre-wrap pb-8">
-                {editExpanded}
-              </div>
+              <div 
+                className="text-base text-foreground/90 leading-loose pb-8 prose prose-lg dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: editExpanded }}
+              />
             )}
           </div>
         </DialogContent>

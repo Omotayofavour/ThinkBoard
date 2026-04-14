@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Editor } from "@/components/ui/editor"
 import { TagInput } from "@/components/tag-input"
 import { Idea } from "@/lib/types"
 
@@ -97,10 +97,10 @@ export function IdeaForm({ onSubmit, initialData, trigger }: IdeaFormProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
+                    <Editor
                       placeholder="Explain your concept in a few sentences."
-                      className="min-h-[100px]"
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

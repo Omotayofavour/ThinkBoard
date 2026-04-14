@@ -185,8 +185,45 @@ export function IdeaCard({ idea, viewMode = 'card', onDelete, onUpdate }: IdeaCa
                 </span>
              </div>
              
-             <div className="opacity-20 group-hover:opacity-100 transition-opacity">
-               <Maximize2 className="h-4 w-4 text-primary" />
+             <div className="flex items-center gap-x-1 shrink-0 z-10 relative bg-background/50 md:bg-transparent rounded-md p-1 md:p-0 backdrop-blur-md md:backdrop-blur-none transition-all">
+               {idea.expandedContent && (
+                 <Button 
+                   title={viewing === 'ai' ? 'Switch to Original' : 'Switch to AI'}
+                   variant="ghost" 
+                   size="icon" 
+                   className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors hidden md:flex" 
+                   onClick={(e) => { 
+                     e.stopPropagation(); 
+                     setViewing(viewing === 'ai' ? 'original' : 'ai') 
+                   }}
+                 >
+                   <ArrowLeftRight className="h-4 w-4" />
+                 </Button>
+               )}
+               <Button 
+                 title="Edit Tags & Content" 
+                 variant="ghost" 
+                 size="icon" 
+                 className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors hidden sm:flex" 
+                 onClick={(e) => { 
+                   e.stopPropagation(); 
+                   setIsEditing(true); 
+                 }}
+               >
+                 <Edit2 className="h-4 w-4" />
+               </Button>
+               <Button 
+                 title="Expand Details" 
+                 variant="ghost" 
+                 size="icon" 
+                 className="h-8 w-8 text-primary opacity-50 group-hover:opacity-100 transition-opacity" 
+                 onClick={(e) => { 
+                   e.stopPropagation(); 
+                   openModal(); 
+                 }}
+               >
+                 <Maximize2 className="h-4 w-4" />
+               </Button>
              </div>
           </div>
         </Card>

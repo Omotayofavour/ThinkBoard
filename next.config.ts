@@ -22,8 +22,10 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverActions: {
-    allowedOrigins: ['localhost:9002', 'localhost:3000', ...getLocalIPs()],
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:9002', 'localhost:3000', ...getLocalIPs()],
+    },
   },
   typescript: {
     ignoreBuildErrors: true,

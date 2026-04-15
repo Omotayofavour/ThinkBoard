@@ -7,8 +7,8 @@
  * - ExpandIdeaOutput - The return type for the expandIdeaWithAI function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ExpandIdeaInputSchema = z.object({
   title: z.string().describe('The title of the brief idea.'),
@@ -33,11 +33,11 @@ export async function expandIdeaWithAI(
 
 const expandIdeaPrompt = ai.definePrompt({
   name: 'expandIdeaPrompt',
-  input: {schema: ExpandIdeaInputSchema},
-  output: {schema: ExpandIdeaOutputSchema},
-  config: { 
-    maxOutputTokens: 300,
-    temperature: 0.5 
+  input: { schema: ExpandIdeaInputSchema },
+  output: { schema: ExpandIdeaOutputSchema },
+  config: {
+    maxOutputTokens: 200,
+    temperature: 0.5
   },
   prompt: `You are a highly creative but extremely concise AI assistant.
 Your task is to take a brief idea and provide a lightning-fast expansion. 
@@ -61,7 +61,7 @@ const expandIdeaFlow = ai.defineFlow(
     // Artificial 2.5-second delay to throttle rapid clicks and reduce backend pressure
     await new Promise(resolve => setTimeout(resolve, 2500));
 
-    const {output} = await expandIdeaPrompt(input);
+    const { output } = await expandIdeaPrompt(input);
     return output!;
   }
 );
